@@ -1,10 +1,9 @@
+import datetime as dt
+
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueValidator
-
-import datetime as dt
-
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 MORE_THAN_ONE_REVIEW = (

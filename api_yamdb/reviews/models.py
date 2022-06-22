@@ -1,7 +1,7 @@
-from django.utils import timezone
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, RegexValidator
 from django.db import models
+from django.utils import timezone
 
 from api_yamdb.settings import TEXT_SCOPE
 
@@ -67,7 +67,6 @@ class User(AbstractUser):
     @property
     def is_moderator(self):
         return self.role == MODERATOR or self.is_admin
-
 
     class Meta(AbstractUser.Meta):
         swappable = 'AUTH_USER_MODEL'
@@ -136,7 +135,7 @@ class Title(models.Model):
         verbose_name='Категория',
         blank=True,
         null=True,
-        on_delete = models.SET_NULL,
+        on_delete=models.SET_NULL,
         related_name='titles'
     )
 

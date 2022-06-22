@@ -1,4 +1,6 @@
-import csv, os, sqlite3
+import csv
+import os
+import sqlite3
 
 path = 'db.sqlite3'
 con = sqlite3.connect(path)

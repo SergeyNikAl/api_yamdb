@@ -191,7 +191,7 @@ class Review(models.Model):
         )
 
 
-class Comment(models.Model):
+class Comments(models.Model):
     review = models.ForeignKey(
         Review,
         verbose_name='Отзыв',

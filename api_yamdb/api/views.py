@@ -2,11 +2,12 @@ from django.shortcuts import get_object_or_404
 from requests import Response
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
-from reviews.models import User
+from reviews.models import User, Title, Comments, Review
 
-from .permissions import IsAdmin
-from .serializers import UserSerializer, TokenSerializer, SignUpSerializer
+from .permissions import IsAdmin, IsAuthorORModeratorOrReadOnly
+from .serializers import UserSerializer, TokenSerializer, SignUpSerializer, ReviewSerializer, CommentsSerializer
 from django.core.mail import send_mail
+from rest_framework.pagination import LimitOffsetPagination
 
 
 USERNAME_ALREADY_EXISTS = 'Такое имя уже занято.'
@@ -97,3 +98,48 @@ class TokenViewSet(viewsets.ModelViewSet):
         payload = jwt_payload_hendler(request.user)
         token = jwt_encode_handler(payload)
         return Response({'token': token}, status=status.HTTP_200_OK)
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewSerializer
+    permission_classes = (
+        permissions.IsAuthenticatedOrReadOnly,
+        IsAuthorORModeratorOrReadOnly,
+    )
+    pagination_class = LimitOffsetPagination
+
+    def get_title(self):
+        return get_object_or_404(Title, id=self.kwargs.get('title_id'))
+
+    def get_queryset(self):
+        return self.get_title().reviews.all()
+
+    def perform_create(self, serializer):
+        serializer.save(
+            title=self.get_title(),
+            author=self.request.user
+        )
+
+
+
+class CommentsViewSet(viewsets.ModelViewSet):
+    queryset = Comments.objects.all()
+    serializer_class = CommentsSerializer
+    permission_classes = (
+        permissions.IsAuthenticatedOrReadOnly,
+        IsAuthorORModeratorOrReadOnly,
+    )
+    pagination_class = LimitOffsetPagination
+
+    def get_review(self):
+        return get_object_or_404(Review, id=self.kwargs.get('review_id'))
+
+    def get_queryset(self):
+        return self.get_review().comments.all()
+
+    def perform_create(self, serializer):
+        serializer.save(
+            author=self.request.user,
+            title=self.get_review()
+        )
+

@@ -4,7 +4,9 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueValidator
+
 from reviews.models import Category, Comment, Genre, Review, Title, User
+
 
 MORE_THAN_ONE_REVIEW = (
     'Нельзя оставить больше одного отзыва '
@@ -122,13 +124,13 @@ class ReviewSerializer(serializers.ModelSerializer):
         return data
 
 
-class CommentSerializer(serializers.ModelSerializer):
+class CommentsSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True,
         slug_field='author',
     )
 
     class Meta:
-        model = Comment
+        model = Comments
         fields = ('id', 'text', 'author', 'pub_date')
         read_only_fields = ('author', 'review')

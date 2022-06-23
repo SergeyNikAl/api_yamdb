@@ -12,7 +12,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Comments)
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ('author', 'review',  'pub_date',)
+    list_display = ('author', 'review', 'pub_date',)
     search_fields = ('author', 'review', 'name', 'pub_date',)
     list_filter = ('author', 'review', 'pub_date',)
     empty_value_display = '-пусто-'

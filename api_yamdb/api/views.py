@@ -6,12 +6,9 @@ from reviews.models import User
 
 from .permissions import IsAdmin
 from .serializers import UserSerializer, TokenSerializer, SignUpSerializer
-from api_yamdb.api import serializers
+from django.core.mail import send_mail
 
 
-USER = 'user'
-MODERATOR = 'moderator'
-ADMIN = 'admin'
 USERNAME_ALREADY_EXISTS = 'Такое имя уже занято.'
 EMAIL_ALREADY_EXISTS = 'Такая почта уже зарегестрирована'
 CORRECT_CODE_EMAIL_MESSAGE = 'Код подтверждения: {code}'
@@ -80,7 +77,7 @@ class SingUpViewSet(viewsets.ModelViewSet):
         return Response(serializers.data, status=status.HTTP_200_OK)
 
         
-class TokenView(viewsets.ModelViewSet):
+class TokenViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     permission_classes = (permissions.AllowAny,)
 

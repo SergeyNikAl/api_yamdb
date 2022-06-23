@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework_simplejwt.settings import api_settings
 
-from reviews.models import User, Title, Comments, Review, ADMIN
+from reviews.models import ADMIN, Comments, Review, Title, User
 from .permissions import IsAdmin, IsAuthorORModeratorOrReadOnly
 from .serializers import (
     CommentsSerializer,
@@ -19,9 +19,9 @@ from .serializers import (
 
 
 USERNAME_ALREADY_EXISTS = 'Такое имя уже занято.'
-EMAIL_ALREADY_EXISTS = 'Такая почта уже зарегестрирована'
-CORRECT_CODE_EMAIL_MESSAGE = 'Код подтверждения: {code}'
-INVALID_CODE = 'Неизвестный запрос'
+EMAIL_ALREADY_EXISTS = 'Такая почта уже зарегестрирована.'
+CORRECT_CODE_EMAIL_MESSAGE = 'Код подтверждения: {code}.'
+INVALID_CODE = 'Неизвестный запрос.'
 
 
 class UserViewSet(viewsets.ModelViewSet):

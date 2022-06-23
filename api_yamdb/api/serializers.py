@@ -5,8 +5,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueValidator
 
-from reviews.models import Category, Comment, Genre, Review, Title, User
-
+from reviews.models import Category, Comments, Genre, Review, Title, User
 
 MORE_THAN_ONE_REVIEW = (
     'Нельзя оставить больше одного отзыва '

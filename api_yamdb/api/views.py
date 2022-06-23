@@ -1,13 +1,21 @@
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from requests import Response
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
-from reviews.models import User, Title, Comments, Review
-
-from .permissions import IsAdmin, IsAuthorORModeratorOrReadOnly
-from .serializers import UserSerializer, TokenSerializer, SignUpSerializer, ReviewSerializer, CommentsSerializer
-from django.core.mail import send_mail
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework_simplejwt.settings import api_settings
+
+from reviews.models import User, Title, Comments, Review, ADMIN
+from .permissions import IsAdmin, IsAuthorORModeratorOrReadOnly
+from .serializers import (
+    CommentsSerializer,
+    ReviewSerializer,
+    SignUpSerializer,
+    TokenSerializer,
+    UserSerializer,
+)
 
 
 USERNAME_ALREADY_EXISTS = 'Такое имя уже занято.'
@@ -15,12 +23,13 @@ EMAIL_ALREADY_EXISTS = 'Такая почта уже зарегестриров�
 CORRECT_CODE_EMAIL_MESSAGE = 'Код подтверждения: {code}'
 INVALID_CODE = 'Неизвестный запрос'
 
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (permissions.IsAuthenticated, IsAdmin)
     filter_backends = (filters.SearchFilter,)
-    serach_fileds = ('username')
+    search_fields = ('username')
 
     @action(
         methods=['get', 'patch'],
@@ -63,9 +72,15 @@ class SingUpViewSet(viewsets.ModelViewSet):
             )
         except User.DoesNotExist:
             if User.objects.filter(username=username).exists():
-                return Response(USERNAME_ALREADY_EXISTS, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    USERNAME_ALREADY_EXISTS,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             if User.objects.filter(email=email).exists():
-                return Response(EMAIL_ALREADY_EXISTS, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    EMAIL_ALREADY_EXISTS,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             user = User.objects.create_user(username=username, email=email)
         user.save()
         confirmation_code = default_token_generator.make_token(user)
@@ -77,7 +92,7 @@ class SingUpViewSet(viewsets.ModelViewSet):
         )
         return Response(serializers.data, status=status.HTTP_200_OK)
 
-        
+
 class TokenViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     permission_classes = (permissions.AllowAny,)
@@ -85,9 +100,13 @@ class TokenViewSet(viewsets.ModelViewSet):
     def create(self, request):
         serializers = TokenSerializer
         serializers.is_valid(raise_exception=True)
-        user = get_object_or_404(User, username=serializers.validated_data.get('username'))
+        user = get_object_or_404(
+            User, username=serializers.validated_data.get('username')
+        )
         confirmation_code = serializers.validated_data.get('confirmation_code')
-        if not default_token_generator.check_token(user=user, token=confirmation_code):
+        if not default_token_generator.check_token(
+                user=user, token=confirmation_code
+        ):
             return Response(
                 INVALID_CODE,
                 status=status.HTTP_400_BAD_REQUEST
@@ -121,7 +140,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         )
 
 
-
 class CommentsViewSet(viewsets.ModelViewSet):
     queryset = Comments.objects.all()
     serializer_class = CommentsSerializer
@@ -142,4 +160,3 @@ class CommentsViewSet(viewsets.ModelViewSet):
             author=self.request.user,
             title=self.get_review()
         )
-

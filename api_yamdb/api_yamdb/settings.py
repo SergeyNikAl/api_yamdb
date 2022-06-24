@@ -111,8 +111,6 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static/'),)
 
 TEXT_SCOPE = 15
 
-AUTH_USER_MODEL = 'reviews.User'
-
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',

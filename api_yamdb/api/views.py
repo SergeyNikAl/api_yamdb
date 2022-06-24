@@ -13,7 +13,7 @@ from rest_framework.pagination import (
 from rest_framework_simplejwt.settings import api_settings
 
 from reviews.models import (
-    ADMIN,Category, Genre, Review, Title, User
+    ADMIN, Category, Genre, Review, Title, User
 )
 from .filtres import TitleFilter
 from .permissions import (

@@ -2,9 +2,6 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from users.models import User
-
-
 def create_users_api(admin_client):
     data = {
         'username': 'TestUser',

@@ -16,11 +16,16 @@ ROLES = (
     (ADMIN, 'admin'),
 )
 RATE_CHOICES = (
-    (1, 'OK'),
-    (2, 'Fine'),
-    (3, 'Good'),
-    (4, 'Amazing'),
-    (5, 'Incredible'),
+    (1, 'Disgusting'),
+    (2, 'Terrible'),
+    (3, 'Bad'),
+    (4, 'Not interested'),
+    (5, 'Average'),
+    (6, 'OK'),
+    (7, 'Fine'),
+    (8, 'Good'),
+    (9, 'Amazing'),
+    (10, 'Incredible'),
 )
 
 

@@ -24,7 +24,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'email', 'role')
+        fields = (
+            'username', 'first_name', 'last_name', 'email', 'role', 'bio'
+        )
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -49,6 +51,10 @@ class TokenSerializer(serializers.ModelSerializer):
     username = serializers.CharField()
     confirmation_code = serializers.CharField()
 
+    class Meta:
+        model = User
+        fields = ('confirmation_code', 'username')
+
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -65,15 +71,11 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
-    rating = serializers.DecimalField(
-        max_digits=3,
-        decimal_places=2,
-        required=False,
-    )
+    rating = serializers.IntegerField(required=False)
 
     class Meta:
         model = Title
-        read_only_fields = '__all__'
+        read_only_fields = ('__all__',)
         fields = (
             'id', 'name', 'year', 'rating', 'description', 'genre', 'category',
         )
@@ -126,10 +128,11 @@ class ReviewSerializer(serializers.ModelSerializer):
 class CommentsSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True,
-        slug_field='author',
+        slug_field='username',
     )
+
 
     class Meta:
         model = Comments
         fields = ('id', 'text', 'author', 'pub_date')
-        read_only_fields = ('author', 'review')
+        read_only_fields = ('author', 'review',)

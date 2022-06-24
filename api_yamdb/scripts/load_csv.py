@@ -55,7 +55,6 @@ def save_genre_title():
 
 def load_csv():
     for file_name, model in csv_models.items():
-        print(f"Started {file_name}")
         with open(os.path.join(script_dir, file_name)) as file:
             reader = csv.reader(file)
             headline = next(reader)

@@ -131,7 +131,6 @@ class CommentsSerializer(serializers.ModelSerializer):
         slug_field='username',
     )
 
-
     class Meta:
         model = Comments
         fields = ('id', 'text', 'author', 'pub_date')

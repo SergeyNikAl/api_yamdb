@@ -21,7 +21,7 @@ csv_models = {
     'comments.csv': Comments,
 }
 
-path = 'db.sqlite3'
+path = os.path.dirname(__file__).replace('scripts', 'db.sqlite3')
 con = sqlite3.connect(path)
 cur = con.cursor()
 script_dir = os.path.join(os.path.dirname(

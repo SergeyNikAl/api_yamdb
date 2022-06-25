@@ -32,10 +32,5 @@ router_v1.register('auth/signup', SingUpViewSet, basename='signup')
 router_v1.register('auth/token', TokenViewSet, basename='active_token')
 
 urlpatterns = [
-    path(
-        'v1/token/',
-        views.TokenObtainPairView.as_view(),
-        name='token_obtain_pair'
-    ),
     path('v1/', include(router_v1.urls)),
 ]

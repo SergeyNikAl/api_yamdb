@@ -1,14 +1,19 @@
+import re
+from datetime import datetime as dt
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MaxValueValidator, RegexValidator
+from django.core.validators import MaxValueValidator, ValidationError
 from django.db import models
-from django.utils import timezone
 
 from api_yamdb.settings import TEXT_SCOPE
+
+INVALID_USERNAME = ('Недопустимое имя пользователя: "{username}". '
+                    'Придумайте другое.')
+USERNAME_SYMBOLS = re.compile(r'[\w.@+-@./+-]+')
+INVALID_USERNAME_SYMBOLS = 'Недопустимые символы. Придумайте другое username. '
 
 USER = 'user'
 MODERATOR = 'moderator'
 ADMIN = 'admin'
-YEAR_OVER_CURRENT = 'Год не может быть больше текущего.'
 
 ROLES = (
     (USER, 'user'),
@@ -28,31 +33,44 @@ RATE_CHOICES = (
     (10, 'Невероятно'),
 )
 
+class UsernameValidation:
+    def validate_username(self, value):
+        if value == 'me':
+            raise ValidationError(INVALID_USERNAME.format(username=value))
+        if not re.match(USERNAME_SYMBOLS, value):
+            raise ValidationError(INVALID_USERNAME_SYMBOLS)
+        return value
 
-class User(AbstractUser):
+def get_now_year():
+    return dt.now().year
+
+class User(AbstractUser, UsernameValidation):
     username = models.CharField(
-        max_length=100,
+        max_length=150,
         unique=True,
-        validators=[RegexValidator(r'^[\w.@+-]+')]
     )
     email = models.EmailField(
+        max_length=254,
         blank=True,
+        null=True,
         unique=True,
         verbose_name='Электронная почта'
     )
     first_name = models.CharField(
         'Имя пользователя',
-        max_length=100,
-        blank=True
+        max_length=150,
+        blank=True,
+        null=True
     )
     last_name = models.CharField(
         'Фамилия пользователя',
-        max_length=100,
-        blank=True
+        max_length=150,
+        blank=True,
+        null=True
     )
     role = models.CharField(
         verbose_name='Роль',
-        max_length=30,
+        max_length=max([len(role[0]) for role in ROLES]),
         choices=ROLES,
         default=USER
     )
@@ -60,7 +78,11 @@ class User(AbstractUser):
         blank=True,
         verbose_name='Биография'
     )
-    password = models.CharField(max_length=150, blank=True)
+    confirmation_code = models.CharField(
+        'Код подтверждения',
+        max_length=6,
+        blank=True
+    )
 
     REQUIRED_FIELDS = ['email']
 
@@ -70,60 +92,55 @@ class User(AbstractUser):
 
     @property
     def is_moderator(self):
-        return self.role == MODERATOR or self.is_admin
+        return self.role == MODERATOR
 
-    class Meta(AbstractUser.Meta):
-        swappable = 'AUTH_USER_MODEL'
+    class Meta:
+        ordering = ("role",)
+        verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"
+
+    def __str__(self):
+        return self.username
 
 
-class Category(models.Model):
+class CategoryGenre(models.Model):
     name = models.CharField(
-        'Категория произведения',
-        max_length=50,
+        'Название',
+        max_length=256,
     )
     slug = models.SlugField(
         'Адрес',
+        max_length=50,
         unique=True
     )
 
     class Meta:
         ordering = ['name']
+        abstract = True
+
+    def __str__(self):
+        return self.name[:TEXT_SCOPE]
+
+
+class Category(CategoryGenre):
+    class Meta:
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 
-    def __str__(self):
-        return self.name[:TEXT_SCOPE]
 
-
-class Genre(models.Model):
-    name = models.CharField(
-        'Жанр произведения',
-        max_length=50,
-    )
-    slug = models.SlugField(
-        'Адрес',
-        unique=True
-    )
-
+class Genre(CategoryGenre):
     class Meta:
-        ordering = ['name']
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
 
-    def __str__(self):
-        return self.name[:TEXT_SCOPE]
-
 
 class Title(models.Model):
-    name = models.CharField(
+    name = models.TextField(
         'Произведение',
-        max_length=50
     )
     year = models.IntegerField(
         'Дата выхода',
-        validators=(MaxValueValidator(
-            timezone.now().year,
-            message=YEAR_OVER_CURRENT),)
+        validators=[MaxValueValidator(get_now_year),]
     )
     description = models.TextField(
         'Описание произведения',
@@ -152,23 +169,35 @@ class Title(models.Model):
         return self.name[:TEXT_SCOPE]
 
 
-class Review(models.Model):
-    text = models.CharField(
-        verbose_name='Отзыв',
-        max_length=250,
+class ReviewComments(models.Model):
+    text = models.TextField(
+        verbose_name='Текст'
     )
-    score = models.PositiveSmallIntegerField(choices=RATE_CHOICES, null=True)
     pub_date = models.DateTimeField(
-        verbose_name='Дата публикации отзыва',
+        verbose_name='Дата записи',
         auto_now_add=True,
         db_index=True,
     )
     author = models.ForeignKey(
         User,
-        verbose_name='Автор отзыва',
+        verbose_name='Автор',
         on_delete=models.CASCADE,
-        related_name='reviews',
-        db_index=True,
+        related_name='%(class)ss'
+    )
+
+    class Meta:
+        ordering = ['-pub_date']
+        abstract = True
+
+    def __str__(self):
+        return self.text[:TEXT_SCOPE]
+
+
+class Review(ReviewComments):
+    score = models.PositiveSmallIntegerField(
+        'Оценка',
+        choices=RATE_CHOICES,
+        null=True,
     )
     title = models.ForeignKey(
         Title,
@@ -178,7 +207,6 @@ class Review(models.Model):
     )
 
     class Meta:
-        ordering = ['-pub_date']
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
         constraints = [
@@ -194,7 +222,7 @@ class Review(models.Model):
         )
 
 
-class Comments(models.Model):
+class Comments(ReviewComments):
     review = models.ForeignKey(
         Review,
         verbose_name='Отзыв',
@@ -203,25 +231,7 @@ class Comments(models.Model):
         null=True,
         related_name='comments',
     )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        verbose_name='Автор комментария',
-        db_index=True,
-    )
-    pub_date = models.DateTimeField(
-        verbose_name='Дата создания комментария',
-        auto_now_add=True,
-        db_index=True,
-    )
-    text = models.TextField(
-        verbose_name='Текст комментария',
-    )
 
     class Meta:
-        ordering = ['-pub_date']
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
-
-    def __str__(self):
-        return self.text[:TEXT_SCOPE]

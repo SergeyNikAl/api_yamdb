@@ -1,16 +1,15 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from rest_framework_simplejwt import views
 
 from api.views import (
     CommentsViewSet,
     CategoryViewSet,
     GenreViewSet,
     ReviewViewSet,
-    SingUpViewSet,
     TitleViewSet,
-    TokenViewSet,
     UserViewSet,
+    signup,
+    get_token
 )
 
 app_name = 'api'
@@ -28,9 +27,10 @@ router_v1.register(
     CommentsViewSet, basename='comments'
 )
 router_v1.register('users', UserViewSet, basename='users')
-router_v1.register('auth/signup', SingUpViewSet, basename='signup')
-router_v1.register('auth/token', TokenViewSet, basename='active_token')
+
 
 urlpatterns = [
     path('v1/', include(router_v1.urls)),
+    path('v1/auth/token/', get_token),
+    path('v1/auth/signup/', signup),
 ]

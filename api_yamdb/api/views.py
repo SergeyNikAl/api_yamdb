@@ -74,10 +74,7 @@ class UserViewSet(viewsets.ModelViewSet):
             partial=True,
         )
         serializer.is_valid(raise_exception=True)
-        if self.request.user.role == ADMIN or self.request.user.is_superuser:
-            serializer.save()
-        else:
-            serializer.save(role=user.role)
+        serializer.save(role=user.role)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

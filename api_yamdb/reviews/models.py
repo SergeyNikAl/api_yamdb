@@ -16,25 +16,24 @@ ROLES = (
     (ADMIN, 'admin'),
 )
 RATE_CHOICES = (
-    (1, 'Disgusting'),
-    (2, 'Terrible'),
-    (3, 'Bad'),
-    (4, 'Not interested'),
-    (5, 'Average'),
+    (1, 'Отвратительно'),
+    (2, 'Ужасно'),
+    (3, 'Плохо'),
+    (4, 'Не интересно'),
+    (5, 'Средне'),
     (6, 'OK'),
-    (7, 'Fine'),
-    (8, 'Good'),
-    (9, 'Amazing'),
-    (10, 'Incredible'),
+    (7, 'Сойдет'),
+    (8, 'Хорошо'),
+    (9, 'Удивительно'),
+    (10, 'Невероятно'),
 )
 
 
 class User(AbstractUser):
-    username_validator = RegexValidator(r'^[\w.@+-]+')
     username = models.CharField(
         max_length=100,
         unique=True,
-        validators=[username_validator]
+        validators=[RegexValidator(r'^[\w.@+-]+')]
     )
     email = models.EmailField(
         blank=True,

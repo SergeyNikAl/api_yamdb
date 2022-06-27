@@ -5,7 +5,7 @@ from django.utils.crypto import get_random_string
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework import filters, permissions, status, viewsets
+from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.pagination import (
     LimitOffsetPagination,
@@ -36,6 +36,15 @@ USERNAME_ALREADY_EXISTS = 'Такое имя уже занято.'
 EMAIL_ALREADY_EXISTS = 'Такая почта уже зарегестрирована.'
 CORRECT_CODE_EMAIL_MESSAGE = 'Код подтверждения: {code}.'
 INVALID_CODE = 'Неверный код подтверждения.'
+
+class CreateListDestroyViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    pass
+
 
 @api_view(['POST'])
 @permission_classes((AllowAny,))
@@ -123,7 +132,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class CategoryGenreViewSet(viewsets.ModelViewSet):
+class CategoryGenreViewSet(CreateListDestroyViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)

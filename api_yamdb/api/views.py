@@ -47,31 +47,7 @@ def signup(request):
     serializer = SignUpSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     try:
-        user, _ = User.objects.get_or_create(
-            email=serializer.validated_data.get('email'),
-            username=serializer.validated_data.get('username'),
-        )
-    except IntegrityError:
-        return Response(
-            {'Ошибка аутентификации':
-                'Введенный вами email или username уже используется. '
-                'Если вы являетесь обладателем этого аккаунта, проверьте '
-                'правильность введенных данных.'
-             },
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    user.confirmation_code = get_random_string(length=6)
-    user.save()
-    send_mail(
-        subject='YaMDb registration code',
-        message=CORRECT_CODE_EMAIL_MESSAGE.format(code=user.confirmation_code),
-        from_email=None,
-        recipient_list=[user.email],
-    )
-    return Response(
-        serializer.data,
-        status=status.HTTP_200_OK
-    )
+
 
 @api_view(['POST'])
 @permission_classes((AllowAny,))

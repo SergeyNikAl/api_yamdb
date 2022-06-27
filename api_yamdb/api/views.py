@@ -48,7 +48,6 @@ def signup(request):
     serializer.is_valid(raise_exception=True)
     try:
 
-
 @api_view(['POST'])
 @permission_classes((AllowAny,))
 def get_token(request):
@@ -62,14 +61,6 @@ def get_token(request):
             'confirmation_code'
     ):
         return Response(INVALID_CODE, status=status.HTTP_400_BAD_REQUEST)
-    confirmation_code = serializer.validated_data.get('confirmation_code')
-    if not default_token_generator.check_token(
-            user=user, token=confirmation_code
-    ):
-        return Response(
-            INVALID_CODE,
-            status=status.HTTP_400_BAD_REQUEST
-        )
     user.save()
     jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
     jwt_encode_handler = api_settings.JWT_ENCODEHANDLER

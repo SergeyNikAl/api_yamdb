@@ -1,3 +1,4 @@
+from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.db.models import Avg
@@ -12,7 +13,7 @@ from rest_framework.pagination import (
     LimitOffsetPagination,
     PageNumberPagination,
 )
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.settings import api_settings
 
 from reviews.models import (
     Category, Genre, Review, Title, User
@@ -39,13 +40,38 @@ CORRECT_CODE_EMAIL_MESSAGE = 'Код подтверждения: {code}.'
 INVALID_CODE = 'Неверный код подтверждения.'
 
 
+
 @api_view(['POST'])
 @permission_classes((AllowAny,))
 def signup(request):
     serializer = SignUpSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     try:
-
+        user, _ = User.objects.get_or_create(
+            email=serializer.validated_data.get('email'),
+            username=serializer.validated_data.get('username'),
+        )
+    except IntegrityError:
+        return Response(
+            {'Ошибка аутентификации':
+                'Введенный вами email или username уже используется. '
+                'Если вы являетесь обладателем этого аккаунта, проверьте '
+                'правильность введенных данных.'
+             },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    user.confirmation_code = get_random_string(length=6)
+    user.save()
+    send_mail(
+        subject='YaMDb registration code',
+        message=CORRECT_CODE_EMAIL_MESSAGE.format(code=user.confirmation_code),
+        from_email=None,
+        recipient_list=[user.email],
+    )
+    return Response(
+        serializer.data,
+        status=status.HTTP_200_OK
+    )
 
 @api_view(['POST'])
 @permission_classes((AllowAny,))
@@ -60,10 +86,20 @@ def get_token(request):
             'confirmation_code'
     ):
         return Response(INVALID_CODE, status=status.HTTP_400_BAD_REQUEST)
-    user.confirmation_code = ''
+    confirmation_code = serializer.validated_data.get('confirmation_code')
+    if not default_token_generator.check_token(
+            user=user, token=confirmation_code
+    ):
+        return Response(
+            INVALID_CODE,
+            status=status.HTTP_400_BAD_REQUEST
+        )
     user.save()
-    token = str(AccessToken.for_user(user))
-    return Response(token, status=status.HTTP_200_OK)
+    jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+    jwt_encode_handler = api_settings.JWT_ENCODEHANDLER
+    payload = jwt_payload_handler(request.user)
+    token = jwt_encode_handler(payload)
+    return Response({'token': token}, status=status.HTTP_200_OK)
 
 
 class UserViewSet(viewsets.ModelViewSet):

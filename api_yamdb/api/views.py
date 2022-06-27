@@ -142,7 +142,7 @@ class GenreViewSet(CategoryGenreViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all().annotate(
         rating=Avg('reviews__score')
-    )
+    ).order_by('name')
     pagination_class = PageNumberPagination
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (
@@ -151,7 +151,6 @@ class TitleViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter
     )
     filterset_class = TitleFilter
-    ordering_fields = ('name',)
 
     def get_serializer_class(self):
         if self.request.method == 'GET':

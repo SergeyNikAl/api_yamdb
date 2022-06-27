@@ -1,4 +1,5 @@
 from django.core.mail import send_mail
+from django.db import IntegrityError
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
@@ -32,8 +33,7 @@ from .serializers import (
     UserSerializer,
 )
 
-USERNAME_ALREADY_EXISTS = 'Такое имя уже занято.'
-EMAIL_ALREADY_EXISTS = 'Такая почта уже зарегестрирована.'
+USERNAME_EMAIL_ALREADY_EXISTS = 'Такое username или email уже занято.'
 CORRECT_CODE_EMAIL_MESSAGE = 'Код подтверждения: {code}.'
 INVALID_CODE = 'Неверный код подтверждения.'
 
@@ -51,37 +51,27 @@ class CreateListDestroyViewSet(
 def signup(request):
     serializer = SignUpSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    username = serializer.validated_data.get('username')
-    email = serializer.validated_data.get('email')
     try:
-        user = User.objects.get(
-            username=username,
-            email=email
+        user, _ = User.objects.get_or_create(
+            email=serializer.validated_data.get('email'),
+            username=serializer.validated_data.get('username'),
         )
-    except User.DoesNotExist:
-        if User.objects.filter(username=username).exists():
-            return Response(
-                USERNAME_ALREADY_EXISTS,
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        if User.objects.filter(email=email).exists():
-            return Response(
-                EMAIL_ALREADY_EXISTS,
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        user = User.objects.create_user(username=username, email=email)
+    except IntegrityError:
+        return Response(
+            USERNAME_EMAIL_ALREADY_EXISTS,
+            status=status.HTTP_400_BAD_REQUEST
+        )
     user.confirmation_code = get_random_string(length=6)
-    user.save()
     send_mail(
-        subject='YaMDb registration code',
-        message=CORRECT_CODE_EMAIL_MESSAGE.format(code=user.confirmation_code),
-        from_email=None,
+        subject='Код регистрации на сервисе YaMDb',
+        message=CORRECT_CODE_EMAIL_MESSAGE.format(
+            code=user.confirmation_code
+        ),
+        from_email='webmaster@localhost',
         recipient_list=[user.email,],
     )
-    return Response(
-        serializer.data,
-        status=status.HTTP_200_OK
-    )
+    user.save()
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @permission_classes((AllowAny,))
@@ -121,8 +111,8 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     def user_profile(self, request):
         if request.method != 'PATCH':
-            return Response(UserSerializer(request.user, partial=True).data)
-        serializer = UserSerializer(
+            return Response(self.get_serializer(request.user).data)
+        serializer = self.get_serializer(
             request.user,
             data=request.data,
             partial=True,

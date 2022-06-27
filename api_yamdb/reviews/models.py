@@ -36,8 +36,6 @@ class User(AbstractUser, UsernameValidation):
     )
     email = models.EmailField(
         max_length=254,
-        blank=True,
-        null=True,
         unique=True,
         verbose_name='Электронная почта'
     )

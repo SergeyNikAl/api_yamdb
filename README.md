@@ -2,9 +2,9 @@
 Проект "YaMDb" позволяет собирать отзывы пользователей на книги, фильмы, музыку.
 
 ### Авторы:
-- Sergey Nikulin (SergeyNikAl) [https://https://github.com/SergeyNikAl]
-- Tatayna (belkalev) [https://github.com/belkalev]
-- Alibek Ubaidullayev (alibekubaidullayev) [https://github.com/alibekubaidullayev]
+- [Sergey Nikulin] (https://github.com/SergeyNikAl)
+- [Tatayna] (https://github.com/belkalev)
+- [Alibek Ubaidullayev] (https://github.com/alibekubaidullayev)
 
 ### Технологии:
 - Python

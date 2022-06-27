@@ -37,6 +37,7 @@ USERNAME_EMAIL_ALREADY_EXISTS = 'Такое username или email уже зан�
 CORRECT_CODE_EMAIL_MESSAGE = 'Код подтверждения: {code}.'
 INVALID_CODE = 'Неверный код подтверждения.'
 
+
 class CreateListDestroyViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
@@ -68,10 +69,11 @@ def signup(request):
             code=user.confirmation_code
         ),
         from_email='webmaster@localhost',
-        recipient_list=[user.email,],
+        recipient_list=[user.email, ],
     )
     user.save()
     return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 @api_view(['POST'])
 @permission_classes((AllowAny,))

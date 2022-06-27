@@ -28,7 +28,6 @@ RATE_CHOICES = (
 )
 
 
-
 class User(AbstractUser, UsernameValidation):
     username = models.CharField(
         max_length=150,
@@ -78,7 +77,7 @@ class User(AbstractUser, UsernameValidation):
         return self.role == MODERATOR
 
     class Meta:
-        ordering = ["role",]
+        ordering = ["role", ]
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
 
@@ -98,7 +97,7 @@ class CategoryGenre(models.Model):
     )
 
     class Meta:
-        ordering = ['name',]
+        ordering = ['name', ]
 
     def __str__(self):
         return self.name[:TEXT_SCOPE]
@@ -122,7 +121,7 @@ class Title(models.Model):
     )
     year = models.IntegerField(
         'Дата выхода',
-        validators=[MaxValueValidator(get_now_year),]
+        validators=[MaxValueValidator(get_now_year), ]
     )
     description = models.TextField(
         'Описание произведения',
@@ -143,7 +142,7 @@ class Title(models.Model):
     )
 
     class Meta:
-        ordering = ['name',]
+        ordering = ['name', ]
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
 
@@ -168,7 +167,7 @@ class ReviewComments(models.Model):
     )
 
     class Meta:
-        ordering = ['-pub_date',]
+        ordering = ['-pub_date', ]
         abstract = True
 
     def __str__(self):
@@ -189,7 +188,7 @@ class Review(ReviewComments):
     )
 
     class Meta:
-        ordering = ['-pub_date',]
+        ordering = ['-pub_date', ]
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
         constraints = [

@@ -98,8 +98,7 @@ class CategoryGenre(models.Model):
     )
 
     class Meta:
-        ordering = ['name']
-        abstract = True
+        ordering = ('name',)
 
     def __str__(self):
         return self.name[:TEXT_SCOPE]
@@ -144,7 +143,7 @@ class Title(models.Model):
     )
 
     class Meta:
-        ordering = ['name']
+        ordering = ('name',)
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
 
@@ -169,7 +168,7 @@ class ReviewComments(models.Model):
     )
 
     class Meta:
-        ordering = ['-pub_date']
+        ordering = ('-pub_date',)
         abstract = True
 
     def __str__(self):

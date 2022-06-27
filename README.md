@@ -48,7 +48,12 @@ pip install -r requirements.txt
 ```
 ../api_yamdb/api_yamdb/scripts/load_csv.py
 ```
-Запустить файл, находясь в директории scripts/
+Запустить оболочку Django shell
 ```
-python load_csv.py
+python3 manage.py shell
+```
+Ввести следующий код
+```
+from scripts.load_csv import load_csv
+load_csv()
 ```

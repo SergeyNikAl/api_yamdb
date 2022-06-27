@@ -39,17 +39,12 @@ CORRECT_CODE_EMAIL_MESSAGE = 'Код подтверждения: {code}.'
 INVALID_CODE = 'Неверный код подтверждения.'
 
 
-
 @api_view(['POST'])
-@permission_classes((AllowAny, ))
+@permission_classes((AllowAny,))
 def signup(request):
     serializer = SignUpSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     try:
-        user, _ = User.objects.get_or_create(
-            email=serializer.validated_data.get('email'),
-            username=serializer.validated_data.get('username'),
-        )
 
 
 @api_view(['POST'])

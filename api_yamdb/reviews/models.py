@@ -1,15 +1,9 @@
-import re
-from datetime import datetime as dt
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MaxValueValidator, ValidationError
+from django.core.validators import MaxValueValidator
 from django.db import models
 
 from api_yamdb.settings import TEXT_SCOPE
-
-INVALID_USERNAME = ('Недопустимое имя пользователя: "{username}". '
-                    'Придумайте другое.')
-USERNAME_SYMBOLS = re.compile(r'[\w.@+-@./+-]+')
-INVALID_USERNAME_SYMBOLS = 'Недопустимые символы. Придумайте другое username. '
+from reviews.validators import UsernameValidation, get_now_year
 
 USER = 'user'
 MODERATOR = 'moderator'
@@ -33,16 +27,7 @@ RATE_CHOICES = (
     (10, 'Невероятно'),
 )
 
-class UsernameValidation:
-    def validate_username(self, value):
-        if value == 'me':
-            raise ValidationError(INVALID_USERNAME.format(username=value))
-        if not re.match(USERNAME_SYMBOLS, value):
-            raise ValidationError(INVALID_USERNAME_SYMBOLS)
-        return value
 
-def get_now_year():
-    return dt.now().year
 
 class User(AbstractUser, UsernameValidation):
     username = models.CharField(

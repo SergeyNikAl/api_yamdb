@@ -3,11 +3,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-
-from reviews.models import (
-    Category, Comments, Genre, Review, Title, User,
-    UsernameValidation, get_now_year
-)
+from reviews.models import Category, Comments, Genre, Review, Title, User
+from reviews.validators import UsernameValidation, get_now_year
 
 MORE_THAN_ONE_REVIEW = (
     'Нельзя оставить больше одного отзыва '
@@ -17,7 +14,6 @@ YEAR_OVER_CURRENT = 'Год не может быть больше текущег
 
 
 class UserSerializer(serializers.ModelSerializer, UsernameValidation):
-
     class Meta:
         model = User
         fields = (

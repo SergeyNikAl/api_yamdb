@@ -43,3 +43,12 @@ python3 -m pip install --upgrade pip
 ```
 pip install -r requirements.txt
 ```
+### Как запустить тестовое наполнение базы:
+Установочный файл тестовой базы находится по адресу
+```
+../api_yamdb/api_yamdb/scripts/load_csv.py
+```
+Запустить файл, находясь в директории scripts/
+```
+python load_csv.py
+```

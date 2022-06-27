@@ -1,6 +1,4 @@
-from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.db import IntegrityError
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
@@ -39,14 +37,42 @@ EMAIL_ALREADY_EXISTS = 'Такая почта уже зарегестриров�
 CORRECT_CODE_EMAIL_MESSAGE = 'Код подтверждения: {code}.'
 INVALID_CODE = 'Неверный код подтверждения.'
 
-
-
 @api_view(['POST'])
 @permission_classes((AllowAny,))
 def signup(request):
     serializer = SignUpSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
+    username = serializer.validated_data.get('username')
+    email = serializer.validated_data.get('email')
     try:
+        user = User.objects.get(
+            username=username,
+            email=email
+        )
+    except User.DoesNotExist:
+        if User.objects.filter(username=username).exists():
+            return Response(
+                USERNAME_ALREADY_EXISTS,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if User.objects.filter(email=email).exists():
+            return Response(
+                EMAIL_ALREADY_EXISTS,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        user = User.objects.create_user(username=username, email=email)
+    user.confirmation_code = get_random_string(length=6)
+    user.save()
+    send_mail(
+        subject='YaMDb registration code',
+        message=CORRECT_CODE_EMAIL_MESSAGE.format(code=user.confirmation_code),
+        from_email=None,
+        recipient_list=[user.email,],
+    )
+    return Response(
+        serializer.data,
+        status=status.HTTP_200_OK
+    )
 
 @api_view(['POST'])
 @permission_classes((AllowAny,))
@@ -97,22 +123,21 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
+class CategoryGenreViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(CategoryGenreViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+
+class GenreViewSet(CategoryGenreViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ['name', ]
-    lookup_field = 'slug'
 
 
 class TitleViewSet(viewsets.ModelViewSet):

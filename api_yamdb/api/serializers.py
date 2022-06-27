@@ -1,27 +1,19 @@
-import datetime as dt
-
+from django.core.validators import MaxValueValidator
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.validators import UniqueValidator
 
 from reviews.models import Category, Comments, Genre, Review, Title, User
+from reviews.validators import UsernameValidation, get_now_year
 
 MORE_THAN_ONE_REVIEW = (
     'Нельзя оставить больше одного отзыва '
     'на выбранное произведение.'
 )
-WRONG_YEAR_CREATION = 'Проверьте год создания произведения.'
-WRONG_USERNAME = 'Имя пользователя указано неверно.'
+YEAR_OVER_CURRENT = 'Год не может быть больше текущего.'
 
 
-class UserSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(
-        validators=[UniqueValidator(
-            queryset=User.objects.all()
-        )]
-    )
-
+class UserSerializer(serializers.ModelSerializer, UsernameValidation):
     class Meta:
         model = User
         fields = (
@@ -29,43 +21,28 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
 
-class SignUpSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(
-        required=True,
-        validators=[UniqueValidator(
-            queryset=User.objects.all()
-        )]
+class SignUpSerializer(serializers.Serializer, UsernameValidation):
+    username = serializers.CharField(
+        max_length=150,
     )
-
-    class Meta:
-        model = User
-        fields = ('email', 'username')
-
-    def validate(self, data):
-        if data.get('username') == 'me':
-            raise serializers.ValidationError(WRONG_USERNAME)
-        return data
+    email = serializers.EmailField(max_length=254)
 
 
-class TokenSerializer(serializers.ModelSerializer):
+class TokenSerializer(serializers.Serializer):
     username = serializers.CharField()
     confirmation_code = serializers.CharField()
-
-    class Meta:
-        model = User
-        fields = ('confirmation_code', 'username')
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        exclude = ['id']
+        fields = ('name', 'slug')
 
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
-        exclude = ['id']
+        fields = ('name', 'slug')
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -88,17 +65,13 @@ class TitlePostEditSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
         slug_field='slug', queryset=Category.objects.all()
     )
-    year = serializers.IntegerField()
+    year = serializers.IntegerField(validators=(MaxValueValidator(
+        get_now_year, YEAR_OVER_CURRENT
+    ),))
 
     class Meta:
         model = Title
         fields = ('id', 'name', 'year', 'description', 'genre', 'category')
-
-    def validate_creation_year(self, value):
-        year = dt.date.today().year
-        if value > year:
-            raise serializers.ValidationError(WRONG_YEAR_CREATION)
-        return value
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -109,8 +82,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = '__all__'
-        read_only_fields = ('author', 'title')
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
 
     def validate(self, data):
         request = self.context['request']
@@ -134,4 +106,3 @@ class CommentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comments
         fields = ('id', 'text', 'author', 'pub_date')
-        read_only_fields = ('author', 'review',)

@@ -43,6 +43,15 @@ python3 -m pip install --upgrade pip
 ```
 pip install -r requirements.txt
 ```
+Выполнить миграции:
+```
+python manage.py migrate
+```
+Запустить проект на локальной машине:
+```
+python manage.py runserver
+```
+
 ### Как запустить тестовое наполнение базы:
 После ваполнения миграций выполнить комманду:
 ```

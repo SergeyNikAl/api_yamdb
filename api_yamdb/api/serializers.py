@@ -3,8 +3,10 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from reviews.models import Category, Comments, Genre, Review, Title, User, \
+from reviews.models import (
+    Category, Comments, Genre, Review, Title, User,
     USERNAME_LENGTH, EMAIL_LENGTH, CONFIRMATION_CODE_LENGTH
+)
 from reviews.validators import (
     UsernameValidation, get_now_year, YEAR_OVER_CURRENT
 )

@@ -10,6 +10,9 @@ from reviews.validators import (
 USER = 'user'
 MODERATOR = 'moderator'
 ADMIN = 'admin'
+USERNAME_LENGTH = 150
+EMAIL_LENGTH = 254
+CONFIRMATION_CODE_LENGTH = 6
 
 ROLES = (
     (USER, 'Пользователь'),
@@ -33,11 +36,11 @@ RATE_CHOICES = (
 class User(AbstractUser, UsernameValidation):
     username = models.CharField(
         'Имя пользователя',
-        max_length=150,
+        max_length=USERNAME_LENGTH,
         unique=True,
     )
     email = models.EmailField(
-        max_length=254,
+        max_length=EMAIL_LENGTH,
         unique=True,
         verbose_name='Электронная почта'
     )
@@ -65,7 +68,7 @@ class User(AbstractUser, UsernameValidation):
     )
     confirmation_code = models.CharField(
         'Код подтверждения',
-        max_length=6,
+        max_length=CONFIRMATION_CODE_LENGTH,
         blank=True
     )
 

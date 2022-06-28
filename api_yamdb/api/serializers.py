@@ -4,13 +4,14 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from reviews.models import Category, Comments, Genre, Review, Title, User
-from reviews.validators import UsernameValidation, get_now_year
+from reviews.validators import (
+    UsernameValidation, get_now_year, YEAR_OVER_CURRENT
+)
 
 MORE_THAN_ONE_REVIEW = (
     'Нельзя оставить больше одного отзыва '
     'на выбранное произведение.'
 )
-YEAR_OVER_CURRENT = 'Год не может быть больше текущего.'
 
 
 class UserSerializer(serializers.ModelSerializer, UsernameValidation):

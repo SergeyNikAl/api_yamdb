@@ -23,13 +23,11 @@ class UserSerializer(serializers.ModelSerializer, UsernameValidation):
 
 
 class SignUpSerializer(serializers.Serializer, UsernameValidation):
-    username = serializers.CharField(
-        max_length=150,
-    )
-    email = serializers.EmailField(max_length=254)
+    username = serializers.CharField()
+    email = serializers.EmailField()
 
 
-class TokenSerializer(serializers.Serializer):
+class TokenSerializer(serializers.Serializer, UsernameValidation):
     username = serializers.CharField()
     confirmation_code = serializers.CharField()
 

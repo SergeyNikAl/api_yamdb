@@ -35,7 +35,7 @@ class ReviewAdmin(admin.ModelAdmin):
 
 @admin.register(Title)
 class TitleAdmin(admin.ModelAdmin):
-    list_display = ('id', 'category', 'year',)
+    list_display = ('id', 'name', 'category', 'year',)
     search_fields = ('name', 'category', 'genre', 'year',)
     list_filter = ('name', 'category', 'genre', 'year',)
     empty_value_display = '-пусто-'

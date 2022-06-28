@@ -44,16 +44,7 @@ python3 -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 ### Как запустить тестовое наполнение базы:
-Установочный файл тестовой базы находится по адресу
+После ваполнения миграций выполнить комманду:
 ```
-../api_yamdb/api_yamdb/scripts/load_csv.py
-```
-Запустить оболочку Django shell
-```
-python3 manage.py shell
-```
-Ввести следующий код
-```
-from scripts.load_csv import load_csv
-load_csv()
+python manage.py csv_manager
 ```

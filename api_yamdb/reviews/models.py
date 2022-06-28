@@ -3,16 +3,18 @@ from django.core.validators import MaxValueValidator
 from django.db import models
 
 from api_yamdb.settings import TEXT_SCOPE
-from reviews.validators import UsernameValidation, get_now_year
+from reviews.validators import (
+    UsernameValidation, get_now_year, YEAR_OVER_CURRENT
+)
 
 USER = 'user'
 MODERATOR = 'moderator'
 ADMIN = 'admin'
 
 ROLES = (
-    (USER, 'user'),
-    (MODERATOR, 'moderator'),
-    (ADMIN, 'admin'),
+    (USER, 'Пользователь'),
+    (MODERATOR, 'Модератор'),
+    (ADMIN, 'Администратор'),
 )
 RATE_CHOICES = (
     (1, 'Отвратительно'),
@@ -30,6 +32,7 @@ RATE_CHOICES = (
 
 class User(AbstractUser, UsernameValidation):
     username = models.CharField(
+        'Имя пользователя',
         max_length=150,
         unique=True,
     )
@@ -52,7 +55,7 @@ class User(AbstractUser, UsernameValidation):
     )
     role = models.CharField(
         verbose_name='Роль',
-        max_length=max([len(role[0]) for role in ROLES]),
+        max_length=max(len(role) for role, _ in ROLES),
         choices=ROLES,
         default=USER
     )
@@ -77,7 +80,7 @@ class User(AbstractUser, UsernameValidation):
         return self.role == MODERATOR
 
     class Meta:
-        ordering = ["role", ]
+        ordering = ["username", ]
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
 
@@ -98,19 +101,20 @@ class CategoryGenre(models.Model):
 
     class Meta:
         ordering = ['name', ]
+        abstract = True
 
     def __str__(self):
         return self.name[:TEXT_SCOPE]
 
 
 class Category(CategoryGenre):
-    class Meta:
+    class Meta(CategoryGenre.Meta):
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 
 
 class Genre(CategoryGenre):
-    class Meta:
+    class Meta(CategoryGenre.Meta):
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
 
@@ -121,7 +125,7 @@ class Title(models.Model):
     )
     year = models.IntegerField(
         'Дата выхода',
-        validators=[MaxValueValidator(get_now_year), ]
+        validators=[MaxValueValidator(get_now_year, YEAR_OVER_CURRENT), ]
     )
     description = models.TextField(
         'Описание произведения',
@@ -163,7 +167,6 @@ class ReviewComments(models.Model):
         User,
         verbose_name='Автор',
         on_delete=models.CASCADE,
-        related_name='%(class)ss'
     )
 
     class Meta:
@@ -171,7 +174,7 @@ class ReviewComments(models.Model):
         abstract = True
 
     def __str__(self):
-        return self.text[:TEXT_SCOPE]
+        return f'{self.author}: {self.text[:TEXT_SCOPE]} {self.pub_date}'
 
 
 class Review(ReviewComments):
@@ -184,11 +187,10 @@ class Review(ReviewComments):
         Title,
         verbose_name='Произведение',
         on_delete=models.CASCADE,
-        related_name='reviews',
     )
 
-    class Meta:
-        ordering = ['-pub_date', ]
+    class Meta(ReviewComments.Meta):
+        default_related_name = 'reviews'
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
         constraints = [
@@ -200,7 +202,7 @@ class Review(ReviewComments):
 
     def __str__(self):
         return (
-            f'{self.author} оставил отзыв на {self.title}'
+            f'{ReviewComments.__str__(self)} отзыв на {self.title}'
         )
 
 
@@ -211,9 +213,9 @@ class Comments(ReviewComments):
         on_delete=models.CASCADE,
         blank=True,
         null=True,
-        related_name='comments',
     )
 
-    class Meta:
+    class Meta(ReviewComments.Meta):
+        default_related_name = 'comments'
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'

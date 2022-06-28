@@ -3,7 +3,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from reviews.models import Category, Comments, Genre, Review, Title, User
+from reviews.models import Category, Comments, Genre, Review, Title, User, \
+    USERNAME_LENGTH, EMAIL_LENGTH, CONFIRMATION_CODE_LENGTH
 from reviews.validators import (
     UsernameValidation, get_now_year, YEAR_OVER_CURRENT
 )
@@ -23,13 +24,15 @@ class UserSerializer(serializers.ModelSerializer, UsernameValidation):
 
 
 class SignUpSerializer(serializers.Serializer, UsernameValidation):
-    username = serializers.CharField()
-    email = serializers.EmailField()
+    username = serializers.CharField(max_length=USERNAME_LENGTH,)
+    email = serializers.EmailField(max_length=EMAIL_LENGTH,)
 
 
 class TokenSerializer(serializers.Serializer, UsernameValidation):
-    username = serializers.CharField()
-    confirmation_code = serializers.CharField()
+    username = serializers.CharField(max_length=USERNAME_LENGTH,)
+    confirmation_code = serializers.CharField(
+        max_length=CONFIRMATION_CODE_LENGTH
+    )
 
 
 class CategorySerializer(serializers.ModelSerializer):

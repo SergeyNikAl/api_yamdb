@@ -15,7 +15,7 @@ from rest_framework.pagination import (
 from rest_framework_simplejwt.settings import api_settings
 
 from reviews.models import (
-    Category, Genre, Review, Title, User
+    Category, Genre, Review, Title, User, CONFIRMATION_CODE_LENGTH
 )
 from .filtres import TitleFilter
 from .permissions import (
@@ -38,15 +38,6 @@ CORRECT_CODE_EMAIL_MESSAGE = 'Код подтверждения: {code}.'
 INVALID_CODE = 'Неверный код подтверждения.'
 
 
-class CreateListDestroyViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
-):
-    pass
-
-
 @api_view(['POST'])
 @permission_classes((AllowAny,))
 def signup(request):
@@ -62,7 +53,7 @@ def signup(request):
             USERNAME_EMAIL_ALREADY_EXISTS,
             status=status.HTTP_400_BAD_REQUEST
         )
-    user.confirmation_code = get_random_string(length=6)
+    user.confirmation_code = get_random_string(length=CONFIRMATION_CODE_LENGTH)
     send_mail(
         subject='Код регистрации на сервисе YaMDb',
         message=CORRECT_CODE_EMAIL_MESSAGE.format(
@@ -88,6 +79,7 @@ def get_token(request):
             'confirmation_code'
     ):
         return Response(INVALID_CODE, status=status.HTTP_400_BAD_REQUEST)
+    user.confirmation_code = ''
     user.save()
     jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
     jwt_encode_handler = api_settings.JWT_ENCODEHANDLER
@@ -124,7 +116,12 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class CategoryGenreViewSet(CreateListDestroyViewSet):
+class CategoryGenreViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -144,7 +141,7 @@ class GenreViewSet(CategoryGenreViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all().annotate(
         rating=Avg('reviews__score')
-    ).order_by('name')
+    )
     pagination_class = PageNumberPagination
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (
@@ -153,6 +150,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter
     )
     filterset_class = TitleFilter
+    ordering_fields = ['name', ]
 
     def get_serializer_class(self):
         if self.request.method == 'GET':

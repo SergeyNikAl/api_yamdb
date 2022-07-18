@@ -4,7 +4,7 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
@@ -54,6 +54,7 @@ def signup(request):
             status=status.HTTP_400_BAD_REQUEST
         )
     user.confirmation_code = get_random_string(length=CONFIRMATION_CODE_LENGTH)
+    user.save()
     send_mail(
         subject='Код регистрации на сервисе YaMDb',
         message=CORRECT_CODE_EMAIL_MESSAGE.format(
@@ -62,7 +63,6 @@ def signup(request):
         from_email='webmaster@localhost',
         recipient_list=[user.email, ],
     )
-    user.save()
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -75,17 +75,17 @@ def get_token(request):
         User,
         username=serializer.validated_data.get('username')
     )
-    if user.confirmation_code != serializer.validated_data.get(
+    if (user.confirmation_code == serializer.validated_data.get(
             'confirmation_code'
-    ):
-        return Response(INVALID_CODE, status=status.HTTP_400_BAD_REQUEST)
+    )) and user.confirmation_code:
+        jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+        jwt_encode_handler = api_settings.JWT_ENCODEHANDLER
+        payload = jwt_payload_handler(request.user)
+        token = jwt_encode_handler(payload)
+        return Response({'token': token}, status=status.HTTP_200_OK)
     user.confirmation_code = ''
     user.save()
-    jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
-    jwt_encode_handler = api_settings.JWT_ENCODEHANDLER
-    payload = jwt_payload_handler(request.user)
-    token = jwt_encode_handler(payload)
-    return Response({'token': token}, status=status.HTTP_200_OK)
+    return Response(INVALID_CODE, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -153,7 +153,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     ordering_fields = ['name', ]
 
     def get_serializer_class(self):
-        if self.request.method == 'GET':
+        if self.request.method in SAFE_METHODS:
             return TitleSerializer
         return TitlePostEditSerializer
 
@@ -179,7 +179,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentsViewSet(viewsets.ModelViewSet):
-    queryset = Review.objects.all()
     serializer_class = CommentsSerializer
     permission_classes = (
         permissions.IsAuthenticatedOrReadOnly,

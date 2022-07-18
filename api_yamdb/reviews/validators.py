@@ -5,7 +5,7 @@ from django.core.validators import ValidationError
 
 INVALID_USERNAME = 'Недопустимое имя пользователя: "{value}".'
 USERNAME_SYMBOLS = re.compile(r'[\w.@+-@./+-]+')
-INVALID_USERNAME_SYMBOLS = 'Недопустимые символы: {value}.'
+INVALID_USERNAME_SYMBOLS = 'Недопустимые символы: {value}'
 YEAR_OVER_CURRENT = 'Год не может быть больше текущего.'
 
 

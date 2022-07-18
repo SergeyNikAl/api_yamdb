@@ -74,6 +74,7 @@ class User(AbstractUser, UsernameValidation):
 
     REQUIRED_FIELDS = ['email']
 
+
     @property
     def is_admin(self):
         return self.role == ADMIN or self.is_staff
